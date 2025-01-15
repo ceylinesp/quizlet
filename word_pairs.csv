@@ -1,18 +1,6 @@
-das Fahrrad,the bicycle,2/3
-die Straße,the street,2/2
-der Baum,the tree,2/3
-der Garten,the garden,0/0
-die Schule,the school,0/0
-die Arbeit,the work/job,0/0
-die Tür,the door,0/0
-das Fenster,the window,0/0
-das Wasser,the water,0/0
-das Essen,the food,0/0
-der Apfel,the apple,0/0
-das Brot,the bread,0/0
-die Milch,the milk,0/0
-der Kaffee,the coffee,0/0
-die Zeitung,the newspaper,0/0
+die Milch,the milk,2/5
+der Kaffee,the coffee,2/5
+die Zeitung,the newspaper,2/8
 das Geld,the money,0/0
 die Uhr,the clock,0/0
 die Sonne,the sun,0/0
@@ -80,6 +68,18 @@ sehen,to see,0/0
 lassen,to let/allow,0/0
 finden,to find,0/0
 der Stuhl,the chair,2/7
+das Brot,the bread,2/3
+die Tür,the door,2/3
+das Fenster,the window,2/3
+das Fahrrad,the bicycle,2/3
+der Baum,the tree,2/3
+das Essen,the food,2/2
+der Apfel,the apple,2/2
+das Wasser,the water,2/2
+der Garten,the garden,2/2
+die Schule,the school,2/2
+die Arbeit,the work/job,2/2
+die Straße,the street,2/2
 das Buch,the book,2/2
 die Katze,the cat,2/2
 das Auto,the car,2/2

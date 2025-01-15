@@ -24,6 +24,8 @@ public class QuizletApp {
     private List<String[]> quizPool;
     private Map<String, Integer> correctAnswersInRound;
     private String lastQuestionWord;
+    private int wordsPerRound = 5; // Default value
+
 
     public QuizletApp() {
         // Initialize word pairs list and statistics map
@@ -35,6 +37,15 @@ public class QuizletApp {
         frame = new JFrame("Quizlet-like App");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
+        frame.getContentPane().setBackground(new Color(240, 248, 255));
+        frame.setLocationRelativeTo(null);
+
+
+        JLabel headerLabel = new JLabel("Quizlet-like App", JLabel.CENTER);
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        headerLabel.setForeground(new Color(33, 37, 41)); // Dark gray text
+        frame.add(headerLabel, BorderLayout.NORTH);
+        
 
         // Set up the display area
         displayArea = new JTextArea();
@@ -42,10 +53,19 @@ public class QuizletApp {
         displayArea.setLineWrap(true);
         displayArea.setWrapStyleWord(true);
         displayArea.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        displayArea.setBackground(new Color(255, 255, 255)); // White background
+        displayArea.setForeground(new Color(33, 37, 41)); // Dark gray text
+        displayArea.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
         JScrollPane scrollPane = new JScrollPane(displayArea);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        frame.add(scrollPane, BorderLayout.CENTER);
+
 
         // Set up the select words button
-        selectWordsButton = new JButton("Select 3 Words");
+        selectWordsButton = new JButton("Select Words");
         selectWordsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -63,19 +83,18 @@ public class QuizletApp {
         });
 
         // Layout setup
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        buttonPanel.setBackground(new Color(240, 248, 255));
         buttonPanel.add(selectWordsButton);
         buttonPanel.add(startQuizButton);
-
-        optionPanel = new JPanel();
-        optionPanel.setLayout(new GridLayout(2, 2, 10, 10));
-        optionPanel.setVisible(false);
-
-        frame.setLayout(new BorderLayout());
-        frame.add(scrollPane, BorderLayout.CENTER);
         frame.add(buttonPanel, BorderLayout.SOUTH);
-        frame.add(optionPanel, BorderLayout.NORTH);
+
+
+        optionPanel = new JPanel(new GridLayout(2, 2, 15, 15));
+        optionPanel.setBackground(new Color(240, 248, 255));
+        optionPanel.setVisible(false);
+        frame.add(optionPanel, BorderLayout.EAST);
+
 
         // Load the CSV file automatically
         loadCSVFile("./word_pairs.csv");
@@ -112,7 +131,7 @@ public class QuizletApp {
                 }
             }
 
-            displayArea.setText("Loaded " + wordPairs.size() + " word pairs successfully!");
+            displayArea.setText("");
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, "Error reading the file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -134,13 +153,13 @@ public class QuizletApp {
             return Double.compare(accuracyA, accuracyB);
         });
 
-        selectedWords = new ArrayList<>(wordPairs.subList(0, Math.min(3, wordPairs.size())));
+        selectedWords = new ArrayList<>(wordPairs.subList(0, Math.min(wordsPerRound, wordPairs.size())));
 
-        StringBuilder sb = new StringBuilder("Selected 3 Words (Lowest Accuracy):\n\n");
+
+        StringBuilder sb = new StringBuilder("\n\n");
         for (String[] pair : selectedWords) {
             Integer[] stats = wordStats.get(pair[0]);
-            double accuracy = stats[1] == 0 ? 0 : (double) stats[0] / stats[1];
-            sb.append(pair[0]).append(" - ").append(pair[1]).append(" (Accuracy: ").append(String.format("%.2f", accuracy)).append(")\n");
+            sb.append(pair[0]).append(" -  ").append(pair[1]).append("\n");
         }
 
         displayArea.setText(sb.toString());
@@ -180,17 +199,17 @@ public class QuizletApp {
 
         if (new Random().nextBoolean()) {
             // Written question
-            displayArea.setText("What is the English word for: " + currentQuestion[0] + "?");
+            displayArea.setText("What is the German word for: " + currentQuestion[1] + "?");
             optionPanel.setVisible(false);
 
             String answer = JOptionPane.showInputDialog(frame, "Write your answer:");
             handleWrittenAnswer(answer);
         } else {
             // Multiple choice question
-            String question = "What is the English word for: " + currentQuestion[0] + "?";
+            String question = "What is the German word for: " + currentQuestion[1] + "?";
             displayArea.setText(question);
 
-            List<String> options = generateOptions(currentQuestion[1]);
+            List<String> options = generateOptions(currentQuestion[0]);
             displayOptions(options, currentQuestion[1]);
         }
     }
@@ -199,7 +218,7 @@ public class QuizletApp {
         Integer[] stats = wordStats.get(currentQuestion[0]);
         stats[1]++; // Increment attempts
 
-        if (answer != null && answer.equalsIgnoreCase(currentQuestion[1])) {
+        if (answer != null && answer.equalsIgnoreCase(currentQuestion[0])) {
             stats[0]++; // Increment correct answers
             int count = correctAnswersInRound.get(currentQuestion[0]) + 1;
             correctAnswersInRound.put(currentQuestion[0], count);
@@ -211,8 +230,8 @@ public class QuizletApp {
             displayArea.setText("Correct!\n\nNext Question...");
             loadNextQuestion();
         } else {
-            String retryAnswer = JOptionPane.showInputDialog(frame, "Incorrect! The correct answer was: " + currentQuestion[1] + ".\nType it correctly to proceed:");
-            if (retryAnswer != null && retryAnswer.equalsIgnoreCase(currentQuestion[1])) {
+            String retryAnswer = JOptionPane.showInputDialog(frame, "Incorrect! The correct answer was: " + currentQuestion[0] + ".\nType it correctly to proceed:");
+            if (retryAnswer != null && retryAnswer.equalsIgnoreCase(currentQuestion[0])) {
                 loadNextQuestion();
             } else {
                 handleWrittenAnswer(retryAnswer);
@@ -270,8 +289,8 @@ public class QuizletApp {
 
         while (options.size() < 4) {
             String[] randomPair = wordPairs.get(random.nextInt(wordPairs.size()));
-            if (!options.contains(randomPair[1])) {
-                options.add(randomPair[1]);
+            if (!options.contains(randomPair[0])) {
+                options.add(randomPair[0]);
             }
         }
 
