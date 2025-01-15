@@ -189,14 +189,14 @@ public class QuizletApp {
 
         if (new Random().nextBoolean()) {
             // Written question
-            displayArea.setText("What is the German word for: " + currentQuestion[1] + "?");
+            displayArea.setText("" + currentQuestion[1] + "");
             optionPanel.setVisible(false);
 
-            String answer = JOptionPane.showInputDialog(frame, "Write your answer:");
+            String answer = JOptionPane.showInputDialog(frame, "German:");
             handleWrittenAnswer(answer);
         } else {
             // Multiple choice question
-            String question = "What is the German word for: " + currentQuestion[1] + "?";
+            String question = "" + currentQuestion[1] + "";
             displayArea.setText(question);
 
             List<String> options = generateOptions(currentQuestion[0]);
