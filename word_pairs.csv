@@ -1,18 +1,6 @@
-lesen,to read,2/2
-schreiben,to write,2/2
-der Mann,the man,2/2
-die Frau,the woman,0/0
-das Kind,the child,0/0
-der Freund,the friend (male),0/0
-die Freundin,the friend (female),0/0
-das Haus,the house,0/0
-der Stuhl,the chair,0/0
-das Buch,the book,0/0
-die Katze,the cat,0/0
-das Auto,the car,0/0
-das Fahrrad,the bicycle,0/0
-die Straße,the street,0/0
-der Baum,the tree,0/0
+das Fahrrad,the bicycle,2/3
+die Straße,the street,2/2
+der Baum,the tree,2/3
 der Garten,the garden,0/0
 die Schule,the school,0/0
 die Arbeit,the work/job,0/0
@@ -91,6 +79,18 @@ wissen,to know,0/0
 sehen,to see,0/0
 lassen,to let/allow,0/0
 finden,to find,0/0
+der Stuhl,the chair,2/7
+das Buch,the book,2/2
+die Katze,the cat,2/2
+das Auto,the car,2/2
+die Freundin,the friend (female),2/2
+das Haus,the house,2/2
+die Frau,the woman,2/2
+das Kind,the child,2/2
+der Freund,the friend (male),2/2
+lesen,to read,2/2
+schreiben,to write,2/2
+der Mann,the man,2/2
 spielen,to play,2/2
 arbeiten,to work,2/2
 helfen,to help,2/2

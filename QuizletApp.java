@@ -5,7 +5,10 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.*;
 import java.awt.Font;
+import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
+
 
 public class QuizletApp {
 
@@ -16,15 +19,17 @@ public class QuizletApp {
     private List<String[]> wordPairs;
     private List<String[]> selectedWords;
     private Map<String, Integer[]> wordStats; // Tracks correct and attempted counts for each word
+    private JPanel optionPanel;
     private String[] currentQuestion;
-    private boolean retryMode;
+    private List<String[]> quizPool;
+    private Map<String, Integer> correctAnswersInRound;
+    private String lastQuestionWord;
 
     public QuizletApp() {
         // Initialize word pairs list and statistics map
         wordPairs = new ArrayList<>();
         selectedWords = new ArrayList<>();
         wordStats = new HashMap<>();
-        retryMode = false;
 
         // Set up the frame
         frame = new JFrame("Quizlet-like App");
@@ -53,7 +58,7 @@ public class QuizletApp {
         startQuizButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                startQuiz();
+                initializeQuiz();
             }
         });
 
@@ -63,9 +68,14 @@ public class QuizletApp {
         buttonPanel.add(selectWordsButton);
         buttonPanel.add(startQuizButton);
 
+        optionPanel = new JPanel();
+        optionPanel.setLayout(new GridLayout(2, 2, 10, 10));
+        optionPanel.setVisible(false);
+
         frame.setLayout(new BorderLayout());
         frame.add(scrollPane, BorderLayout.CENTER);
         frame.add(buttonPanel, BorderLayout.SOUTH);
+        frame.add(optionPanel, BorderLayout.NORTH);
 
         // Load the CSV file automatically
         loadCSVFile("./word_pairs.csv");
@@ -136,48 +146,137 @@ public class QuizletApp {
         displayArea.setText(sb.toString());
     }
 
-    private void startQuiz() {
+    private void initializeQuiz() {
         if (selectedWords.isEmpty()) {
             JOptionPane.showMessageDialog(frame, "No words selected! Please select words first.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Map<String, Integer> correctAnswersInRound = new HashMap<>(); // Tracks correct answers in the current round
+        correctAnswersInRound = new HashMap<>();
         for (String[] pair : selectedWords) {
             correctAnswersInRound.put(pair[0], 0);
         }
 
-        List<String[]> quizPool = new ArrayList<>(selectedWords);
-        while (!quizPool.isEmpty()) {
-            Collections.shuffle(quizPool); // Shuffle the pool for randomness
-            String[] currentPair = quizPool.get(0);
-            String question = "What is the English word for: " + currentPair[0] + "?";
-            String answer = JOptionPane.showInputDialog(frame, question);
+        quizPool = new ArrayList<>(selectedWords);
+        lastQuestionWord = null;
+        loadNextQuestion();
+    }
 
-            Integer[] stats = wordStats.get(currentPair[0]);
-            stats[1]++; // Increment attempts
+    private void loadNextQuestion() {
+        if (quizPool.isEmpty()) {
+            displayArea.setText("Quiz Complete! Accuracy for each word:\n\n" + getAccuracyReport());
+            saveStatsToCSV("./word_pairs.csv");
+            optionPanel.setVisible(false);
+            return;
+        }
 
-            if (answer != null && answer.equalsIgnoreCase(currentPair[1])) {
-                stats[0]++; // Increment correct answers
-                int count = correctAnswersInRound.get(currentPair[0]) + 1;
-                correctAnswersInRound.put(currentPair[0], count);
+        // Ensure the next question is different from the last one
+        do {
+            Collections.shuffle(quizPool);
+            currentQuestion = quizPool.get(0);
+        } while (currentQuestion[0].equals(lastQuestionWord) && quizPool.size() > 1);
 
-                if (count >= 2) {
-                    quizPool.remove(0); // Remove word from pool after 2 correct answers
-                }
+        lastQuestionWord = currentQuestion[0];
+
+        if (new Random().nextBoolean()) {
+            // Written question
+            displayArea.setText("What is the English word for: " + currentQuestion[0] + "?");
+            optionPanel.setVisible(false);
+
+            String answer = JOptionPane.showInputDialog(frame, "Write your answer:");
+            handleWrittenAnswer(answer);
+        } else {
+            // Multiple choice question
+            String question = "What is the English word for: " + currentQuestion[0] + "?";
+            displayArea.setText(question);
+
+            List<String> options = generateOptions(currentQuestion[1]);
+            displayOptions(options, currentQuestion[1]);
+        }
+    }
+
+    private void handleWrittenAnswer(String answer) {
+        Integer[] stats = wordStats.get(currentQuestion[0]);
+        stats[1]++; // Increment attempts
+
+        if (answer != null && answer.equalsIgnoreCase(currentQuestion[1])) {
+            stats[0]++; // Increment correct answers
+            int count = correctAnswersInRound.get(currentQuestion[0]) + 1;
+            correctAnswersInRound.put(currentQuestion[0], count);
+
+            if (count >= 2) {
+                quizPool.remove(0); // Remove word from pool after 2 correct answers
+            }
+
+            displayArea.setText("Correct!\n\nNext Question...");
+            loadNextQuestion();
+        } else {
+            String retryAnswer = JOptionPane.showInputDialog(frame, "Incorrect! The correct answer was: " + currentQuestion[1] + ".\nType it correctly to proceed:");
+            if (retryAnswer != null && retryAnswer.equalsIgnoreCase(currentQuestion[1])) {
+                loadNextQuestion();
             } else {
-                String correctAnswerPrompt = "Incorrect! The correct answer is: " + currentPair[1] + ".\nType it correctly to proceed:";
-                while (true) {
-                    String retryAnswer = JOptionPane.showInputDialog(frame, correctAnswerPrompt);
-                    if (retryAnswer != null && retryAnswer.equalsIgnoreCase(currentPair[1])) {
-                        break; // Move on only if the correct answer is typed
-                    }
+                handleWrittenAnswer(retryAnswer);
+            }
+        }
+    }
+
+    private void displayOptions(List<String> options, String correctAnswer) {
+        optionPanel.removeAll();
+        optionPanel.setVisible(true);
+
+        for (String option : options) {
+            JButton button = new JButton(option);
+            button.setFont(new Font("SansSerif", Font.PLAIN, 18));
+            button.setBackground(Color.LIGHT_GRAY);
+            button.setFocusPainted(false);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    handleOptionSelection(option, correctAnswer);
                 }
+            });
+            optionPanel.add(button);
+        }
+
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    private void handleOptionSelection(String selectedOption, String correctAnswer) {
+        Integer[] stats = wordStats.get(currentQuestion[0]);
+        stats[1]++; // Increment attempts
+
+        if (selectedOption.equalsIgnoreCase(correctAnswer)) {
+            stats[0]++; // Increment correct answers
+            int count = correctAnswersInRound.get(currentQuestion[0]) + 1;
+            correctAnswersInRound.put(currentQuestion[0], count);
+
+            if (count >= 2) {
+                quizPool.remove(0); // Remove word from pool after 2 correct answers
+            }
+
+            displayArea.setText("Correct!\n\nNext Question...");
+        } else {
+            displayArea.setText("Incorrect! The correct answer was: " + correctAnswer);
+        }
+
+        loadNextQuestion();
+    }
+
+    private List<String> generateOptions(String correctAnswer) {
+        List<String> options = new ArrayList<>();
+        options.add(correctAnswer);
+        Random random = new Random();
+
+        while (options.size() < 4) {
+            String[] randomPair = wordPairs.get(random.nextInt(wordPairs.size()));
+            if (!options.contains(randomPair[1])) {
+                options.add(randomPair[1]);
             }
         }
 
-        displayArea.setText("Quiz Complete! Accuracy for each word:\n\n" + getAccuracyReport());
-        saveStatsToCSV("./word_pairs.csv");
+        Collections.shuffle(options);
+        return options;
     }
 
     private String getAccuracyReport() {
