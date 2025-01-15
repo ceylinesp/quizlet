@@ -14,7 +14,6 @@ public class QuizletApp {
 
     private JFrame frame;
     private JTextArea displayArea;
-    private JButton selectWordsButton;
     private JButton startQuizButton;
     private List<String[]> wordPairs;
     private List<String[]> selectedWords;
@@ -24,7 +23,7 @@ public class QuizletApp {
     private List<String[]> quizPool;
     private Map<String, Integer> correctAnswersInRound;
     private String lastQuestionWord;
-    private int wordsPerRound = 5; // Default value
+    private int wordsPerRound = 10; 
 
 
     public QuizletApp() {
@@ -62,17 +61,7 @@ public class QuizletApp {
         JScrollPane scrollPane = new JScrollPane(displayArea);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         frame.add(scrollPane, BorderLayout.CENTER);
-
-
-        // Set up the select words button
-        selectWordsButton = new JButton("Select Words");
-        selectWordsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectWordsWithLowestAccuracy();
-            }
-        });
-
+        
         // Set up the start quiz button
         startQuizButton = new JButton("Start Quiz");
         startQuizButton.addActionListener(new ActionListener() {
@@ -85,7 +74,6 @@ public class QuizletApp {
         // Layout setup
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         buttonPanel.setBackground(new Color(240, 248, 255));
-        buttonPanel.add(selectWordsButton);
         buttonPanel.add(startQuizButton);
         frame.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -98,6 +86,8 @@ public class QuizletApp {
 
         // Load the CSV file automatically
         loadCSVFile("./word_pairs.csv");
+        selectWordsWithLowestAccuracy();
+
 
         // Show the frame
         frame.setVisible(true);
@@ -156,7 +146,7 @@ public class QuizletApp {
         selectedWords = new ArrayList<>(wordPairs.subList(0, Math.min(wordsPerRound, wordPairs.size())));
 
 
-        StringBuilder sb = new StringBuilder("\n\n");
+        StringBuilder sb = new StringBuilder("Words to study:\n");
         for (String[] pair : selectedWords) {
             Integer[] stats = wordStats.get(pair[0]);
             sb.append(pair[0]).append(" -  ").append(pair[1]).append("\n");
